@@ -1,14 +1,15 @@
 'use strict';
 let mysql = require('mysql');
 let connection = mysql.createConnection({
-    // host: 'localhost',
-    // user: 'root',
-    // password: '',
-    // database: 'gpswox_web'
-    host: '95.179.146.30',
+    host: 'localhost',
     user: 'root',
-    password: 'j9#L%oa#rT-XD*3P',
+    password: '',
     database: 'gpswox_web'
+        // host: 'localhost',
+        // port: '3306',
+        // user: 'root',
+        // password: 'KJ8IaGNMGXm2B9LJMjkjeeQNafYzUy2I',
+        // database: 'gpswox_web'
 });
 
 connection.connect(function(err) {

@@ -6,6 +6,11 @@ var express = require('express'),
 // use this to handle post requests with body 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(function(req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 var routes = require('./api/routes/routes'); //importing route
 routes(app); //register the route
@@ -21,3 +26,5 @@ console.log('Application started on port: ' + port);
 app.use(function(req, res) {
     res.status(404);
 });
+
+app.use(require('morgan')('dev'));
