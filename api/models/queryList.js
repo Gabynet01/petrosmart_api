@@ -11,19 +11,24 @@ let driverQueries = {
     // "vehicleNamesById": "select veh_id, name from petrosmart_vehicles where veh_id in (?, ?)",
     "driverById": "select * from petrosmart_drivers where driver_id = ?",
     "fetchAllVouchersById": "SELECT DV.*, C.full_name AS CompanyName FROM petrosmart_voucher_list AS DV INNER JOIN petrosmart_fuel_voucher AS CV ON DV.parent_voucher_id = CV.fv_id INNER JOIN petrosmart_customer AS C ON CV.customer = C.cust_id WHERE driver_id = ? ORDER BY created_at DESC",
-    "fetchAllTransactionsById": "SELECT PurchaseHistory.*, S.Name AS StationName, S.address AS StationAddress, V.name as VehicleName, V.number_plate AS VehicleRegNo FROM petrosmart_api_purchase_info AS PurchaseHistory INNER JOIN petrosmart_fuel_station AS S ON PurchaseHistory.station = S.station_id INNER JOIN petrosmart_vehicles AS V ON PurchaseHistory.vehicle = V.veh_id where user = ? AND payment_code_status = 'ACTIVE' OR payment_code_status = 'INACTIVE' ORDER BY created_at DESC",
-    "dashboardById": "select SUM(amount) as total_amount, month(created_at) as month, year(created_at) as year from petrosmart_api_purchase_info where user = ? AND YEAR(created_at) = ? AND payment_code_status = 'INACTIVE' group by YEAR(created_at), MONTH(created_at)",
+    "fetchAllTransactionsById": "SELECT PurchaseHistory.*, S.Name AS StationName, S.address AS StationAddress, V.name as VehicleName, V.number_plate AS VehicleRegNo FROM petrosmart_api_purchase_info AS PurchaseHistory INNER JOIN petrosmart_fuel_station AS S ON PurchaseHistory.station = S.station_id INNER JOIN petrosmart_vehicles AS V ON PurchaseHistory.vehicle = V.veh_id where user = ? AND (payment_code_status = 'INACTIVE' OR payment_code_status = 'ACTIVE') ORDER BY created_at DESC",
+    "transactionsByYearChart": "select SUM(amount) as total_amount, month(created_at) as month, year(created_at) as year from petrosmart_api_purchase_info where user = ? AND YEAR(created_at) = ? AND payment_code_status = 'INACTIVE' group by YEAR(created_at), MONTH(created_at)",
+    "transactionsByMonthChart": "SELECT SUM(amount) AS total_amount, DAYOFMONTH(created_at) AS day, year(created_at) as year FROM petrosmart_api_purchase_info WHERE user = ? AND MONTH(created_at) = ? AND YEAR(created_at) = ? AND payment_code_status = 'INACTIVE' GROUP BY DAYOFMONTH(created_at)",
+    "transactionsByWeekChart": "SELECT SUM(amount) AS total_amount, DAYNAME(created_at) AS day_name, year(created_at) as year FROM petrosmart_api_purchase_info WHERE user = ? AND YEARWEEK(created_at) = YEARWEEK(NOW()) AND payment_code_status = 'INACTIVE' GROUP BY DAYOFMONTH(created_at)",
+    "fetchTransactionsByMonthYear":"SELECT PurchaseHistory.*, S.Name AS StationName, S.address AS StationAddress, V.name as VehicleName, V.number_plate AS VehicleRegNo FROM petrosmart_api_purchase_info AS PurchaseHistory INNER JOIN petrosmart_fuel_station AS S ON PurchaseHistory.station = S.station_id INNER JOIN petrosmart_vehicles AS V ON PurchaseHistory.vehicle = V.veh_id WHERE user = ? AND MONTH(PurchaseHistory.created_at) = ? AND YEAR(PurchaseHistory.created_at) = ? AND (payment_code_status = 'INACTIVE' OR payment_code_status = 'ACTIVE') ORDER BY created_at DESC",
     "driverInfoById": "select * from petrosmart_drivers where driver_id = ? AND vehicles_selected like ?",
     "driverByPhoneNumber": "select * from petrosmart_drivers where mob = ?",
     "checkLoggedInDriver": "select * from petrosmart_api_login where mob = ?",
     "registerDriver": "INSERT INTO petrosmart_api_login (user_id, otp, password, mob, push_notification_id) VALUES (?,?,?,?,?)",
     "updateOtp": "UPDATE petrosmart_api_login set otp = COALESCE(?,otp) WHERE mob = ?",
-    "updatePin": "UPDATE petrosmart_api_login set password = COALESCE(?,password) WHERE mob = ?"
+    "updatePin": "UPDATE petrosmart_api_login set password = COALESCE(?,password) WHERE mob = ?",
+    "submitFeedback": "INSERT INTO petrosmart_api_feedback (title, message, user_id, user_type, created_at, updated_at) VALUES (?,?,?,?,?,?)",
 }
 
 let stationQueries = {
     "stationById": "select * from petrosmart_fuel_station where station_id = ?",
     "stationBygps": "select * from petrosmart_fuel_station where gps LIKE ?",
+    "allFuelStations": "select * from petrosmart_fuel_station",
     "purchaseInfo": "INSERT INTO petrosmart_api_purchase_info (purchase_id, user, vehicle, station, amount, status, transaction_id, payment_code_status, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
     "getPurchaseById": "select * from petrosmart_api_purchase_info where purchase_id = ?",
     "UpdatePurchaseInfoById": "UPDATE petrosmart_api_purchase_info set status = COALESCE(?,status), transaction_id = COALESCE(?,transaction_id) WHERE purchase_id = ?"

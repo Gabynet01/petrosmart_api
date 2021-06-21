@@ -739,7 +739,7 @@ exports.auto_transact = function (req, res) {
                                                                         res.status(400).json({ "error": err.message })
                                                                         return;
 
-                                                                    }                                                                    
+                                                                    }
 
                                                                 });
 
@@ -755,7 +755,7 @@ exports.auto_transact = function (req, res) {
                                                                 helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Purchase Awaiting Approval", "Your payment request of GHC" + purchaseAmount + " is awaiting approval by your fleet manager. You will be notified once the payment is successful.", userNotificationType);
 
                                                                 console.log("Push notification for fleet managers since all vouchers are used or none was found", allFleetManagersIds)
-                      
+
                                                                 //lets send to each fleet manager
                                                                 for (var i = 0; i < allFleetManagersIds.length; i++) {
                                                                     console.log("am pushing notification data")
@@ -1047,7 +1047,7 @@ exports.auto_transact = function (req, res) {
                                                                         if (err) {
                                                                             res.status(400).json({ "error": err.message })
                                                                             return;
-                                                                        }                                                                  
+                                                                        }
 
                                                                     });
 
@@ -1522,5 +1522,82 @@ exports.fleetmanager_companypool_request = function (req, res) {
                 }
             });
         }
+    });
+}
+
+/**
+ * This is for checking account balance of wallets from wiztransact
+ * @param {*} req 
+ * @param {*} res 
+ */
+exports.check_wallet_balance = function (req, res) {
+    // create an array of errors to return
+    var errors = [];
+
+    if (!req.body.merchant_token) {
+        errors.push("No merchant token specified");
+    }
+    if (!req.body.authorization_key) {
+        errors.push("API Key is missing");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    //creae data body
+    var data = {
+        merchantToken: req.body.merchant_token,
+        authorization: req.body.authorization_key
+    };
+
+
+    //fetch the http body options from helperfunction
+    var options = helperFunctions.CHECK_WALLET_BALANCE_OPTIONS(data.authorization, data.merchantToken);
+
+    console.log("options returned from functions ", options);
+    request(options, function (error, response) {
+        if (error) {
+            console.log("Error occured while calling the wallet balance API-->", error);
+            //send push notification here
+            res.json({
+                "code": errorCode,
+                "message": "OOPS! An error occured when try to reach the Wallet Balance Gateway. Please try again"
+            });
+            return;
+        }
+
+        //convert the invalid string object to a valid JSON Object
+        var responseBody = JSON.parse(`[${response.body}]`);
+        var apiCallResponse = responseBody[0];
+        console.log("Response Body from Wallet Balance API", apiCallResponse);
+
+        //Since no error occured, cheeck the status of the call here
+
+        if (apiCallResponse.status == false) {
+            res.json({
+                "code": errorCode,
+                "message": apiCallResponse.statusMsg
+            });
+            return;
+        }
+
+        else if (apiCallResponse.status == true) {
+            res.json({
+                "code": successCode,
+                "message": apiCallResponse.statusMsg,
+                "data": apiCallResponse.balances
+            });
+            return;
+        }
+        else {
+            res.json({
+                "code": errorCode,
+                "message": "OOPS! An error occured when try to reach the Wallet Balance Gateway. Please try again"
+            });
+            return;
+        }
+
     });
 }

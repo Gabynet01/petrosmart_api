@@ -51,8 +51,12 @@ module.exports = function (app) {
     app.route('/api/drivers/get/vouchers/:id')
         .get(driverTask.fetch_vouchers_by_id)
 
+    //transaction history 
     app.route('/api/drivers/get/transactions/:id/history')
         .get(driverTask.fetch_transactions_history_by_id)
+
+    app.route('/api/drivers/get/transactions/:id/month/:selectedMonth/year/:selectedYear/history')
+        .get(driverTask.fetch_transactions_history_by_id_month_year)
 
     /**
      * Payment Routes
@@ -78,12 +82,33 @@ module.exports = function (app) {
     app.route('/api/payment/fleetmanager/companypool/request')
         .post(paymentTask.fleetmanager_companypool_request)
 
+    // Check wallet balance
+    app.route('/api/check/wallet/balance/')
+        .post(paymentTask.check_wallet_balance)
+
 
     /**
-     * Dashbard route
+     * Successful Transactions History chart route
      */
-    app.route('/api/drivers/dashboard/:id/year/:selectedYear')
-        .get(driverTask.driver_dashboard)
+    app.route('/api/drivers/chart/:id/yearly/')
+        .get(driverTask.yearly_transaction_chart)
+
+    app.route('/api/drivers/chart/:id/monthly/')
+        .get(driverTask.monthly_transaction_chart)
+
+    app.route('/api/drivers/chart/:id/weekly/')
+        .get(driverTask.weekly_transaction_chart)
+
+
+    /**
+     * Get Fuel stations via locations
+     * 
+     */
+    app.route('/api/drivers/nearest/fuel/stations/')
+        .post(driverTask.nearest_fuel_stations)
+
+    app.route('/api/drivers/:id/fuel/stations/')
+        .get(driverTask.all_fuel_stations)
 
 
     /**
@@ -91,5 +116,12 @@ module.exports = function (app) {
      */
     app.route('/api/fleetmanager/fetch/assigned/:id/requests/:status')
         .get(fleetManagerTask.fetch_assigned_requests_by_status)
+
+    /**
+     * Submit feedback
+     */
+
+    app.route('/api/petrosmart/submit/feedback/')
+        .post(driverTask.submit_feedback)
 
 };
