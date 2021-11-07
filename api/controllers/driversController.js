@@ -430,6 +430,91 @@ exports.fetch_vehicles_by_id = function (req, res) {
     });
 };
 
+
+/**
+ * Fetch assigned drivers to a vehicle by vehicle ID
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_drivers_by_vehicle_id = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No vehicle ID specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        vehicleId: req.params.id
+    }
+
+    var params = [data.vehicleId]
+    db.query(sql.vehicleById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find vehicle"
+            })
+            return;
+        } else {
+
+            //once driver is found lets get the vehicles selected
+
+            console.log(result[0]["drivers_selected"]);
+            var driverVehicles = result[0]["drivers_selected"];
+
+            //check if request is empty
+            if (driverVehicles == null || driverVehicles == undefined || driverVehicles == "") {
+                res.json({
+                    "code": errorCode,
+                    "message": "No drivers have been assigned for this vehicle",
+                })
+                return;
+            }
+            var allVehiclesIds = driverVehicles.split(",");
+
+            console.log(allVehiclesIds.length)
+            var editedArrays = [];
+            for (var i = 0; i < allVehiclesIds.length; i++) {
+                var mainData = "'" + allVehiclesIds[i] + "'"
+                editedArrays.push(mainData);
+            }
+
+            var queryArray = editedArrays.toString();
+
+            var vehicleNamesById = "SELECT D.* FROM petrosmart_drivers AS D INNER JOIN petrosmart_vehicles AS PV ON D.driver_id in (PV.drivers_selected) where driver_id in (" + queryArray + ") AND vehicles_selected LIKE '%" + data.vehicleId + "%'";
+
+            // lets loop through
+
+            db.query(vehicleNamesById, allVehiclesIds, function (err, result) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                } else {
+                    res.json({
+                        "code": successCode,
+                        "message": "Assigned Drivers retrieved successfully",
+                        "data": result
+                    })
+                    return;
+                }
+
+            })
+
+        }
+
+    });
+};
+
 /**
  * Fetch driver vouchers by ID
  * Request - GET
@@ -564,6 +649,138 @@ exports.fetch_transactions_history_by_id = function (req, res) {
 };
 
 /**
+ * Fetch vehicle transaction history by ID
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_transactions_history_by_vehicle_id = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No vehicle ID specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        vehicleId: req.params.id
+    }
+
+    var params = [data.vehicleId]
+    db.query(sql.vehicleById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find vehicle"
+            })
+            return;
+        } else {
+            //lets pull the transactions for this driver          
+
+            var params = [data.vehicleId]
+            db.query(sql.fetchAllTransactionsByVehicleId, params, function (err, responseData) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                }
+
+                if (responseData.length == 0) {
+                    res.json({
+                        "code": errorCode,
+                        "message": "No transaction history was found"
+                    })
+                    return;
+                } else {
+
+                    res.json({
+                        "code": successCode,
+                        "message": "Transaction history pulled successfully",
+                        "data": responseData
+                    })
+                    return;
+
+                }
+            });
+        }
+
+    });
+};
+
+/**
+ * Fetch station transaction history by ID
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_transactions_history_by_station_id = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No station ID specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        stationId: req.params.id
+    }
+
+    var params = [data.stationId]
+    db.query(sqlStation.stationById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find station"
+            })
+            return;
+        } else {
+            //lets pull the transactions for this station          
+
+            var params = [data.stationId]
+            db.query(sql.fetchAllTransactionsByStationId, params, function (err, responseData) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                }
+
+                if (responseData.length == 0) {
+                    res.json({
+                        "code": errorCode,
+                        "message": "No transaction history was found"
+                    })
+                    return;
+                } else {
+
+                    res.json({
+                        "code": successCode,
+                        "message": "Transaction history pulled successfully",
+                        "data": responseData
+                    })
+                    return;
+
+                }
+            });
+        }
+
+    });
+};
+
+/**
  * Fetch driver transaction history by ID, Month and Year
  * Request - GET
  * Params {jsonBodyItems}
@@ -610,6 +827,240 @@ exports.fetch_transactions_history_by_id_month_year = function (req, res) {
 
             var params = [data.driverId, data.selectedMonth, data.selectedYear]
             db.query(sql.fetchTransactionsByMonthYear, params, function (err, responseData) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                }
+
+                if (responseData.length == 0) {
+                    res.json({
+                        "code": errorCode,
+                        "message": "No transaction history was found"
+                    })
+                    return;
+                } else {
+
+                    res.json({
+                        "code": successCode,
+                        "message": "Transaction history pulled successfully",
+                        "data": responseData
+                    })
+                    return;
+
+                }
+            });
+        }
+
+    });
+};
+
+/**
+ * Fetch driver transaction history by ID, Day, Month and Year
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_transactions_history_by_id_day_month_year = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No driver ID specified");
+    }
+    if (!req.params.selectedDay) {
+        errors.push("No day specified");
+    }
+    if (!req.params.selectedMonth) {
+        errors.push("No month specified");
+    }
+    if (!req.params.selectedYear) {
+        errors.push("No year specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        driverId: req.params.id,
+        selectedDay: req.params.selectedDay,
+        selectedMonth: req.params.selectedMonth,
+        selectedYear: req.params.selectedYear
+    }
+
+    var params = [data.driverId]
+    db.query(sql.driverById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find driver"
+            })
+            return;
+        } else {
+            //lets pull the transactions for this driver          
+
+            var params = [data.driverId, data.selectedDay, data.selectedMonth, data.selectedYear]
+            db.query(sql.fetchTransactionsByDayMonthYear, params, function (err, responseData) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                }
+
+                if (responseData.length == 0) {
+                    res.json({
+                        "code": errorCode,
+                        "message": "No transaction history was found"
+                    })
+                    return;
+                } else {
+
+                    res.json({
+                        "code": successCode,
+                        "message": "Transaction history pulled successfully",
+                        "data": responseData
+                    })
+                    return;
+
+                }
+            });
+        }
+
+    });
+};
+
+/**
+ * Fetch vehicle transaction history by ID, Day, Month and Year
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_transactions_history_by_vehicle_id_day_month_year = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No vehicle ID specified");
+    }
+    if (!req.params.selectedDay) {
+        errors.push("No day specified");
+    }
+    if (!req.params.selectedMonth) {
+        errors.push("No month specified");
+    }
+    if (!req.params.selectedYear) {
+        errors.push("No year specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        vehicleId: req.params.id,
+        selectedDay: req.params.selectedDay,
+        selectedMonth: req.params.selectedMonth,
+        selectedYear: req.params.selectedYear
+    }
+
+    var params = [data.vehicleId]
+    db.query(sql.vehicleById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find vehicle"
+            })
+            return;
+        } else {
+            //lets pull the transactions for this vehicle          
+
+            var params = [data.vehicleId, data.selectedDay, data.selectedMonth, data.selectedYear]
+            db.query(sql.fetchVehicleTransactionsByDayMonthYear, params, function (err, responseData) {
+                if (err) {
+                    res.status(400).json({ "error": err.message })
+                    return;
+                }
+
+                if (responseData.length == 0) {
+                    res.json({
+                        "code": errorCode,
+                        "message": "No transaction history was found"
+                    })
+                    return;
+                } else {
+
+                    res.json({
+                        "code": successCode,
+                        "message": "Transaction history pulled successfully",
+                        "data": responseData
+                    })
+                    return;
+
+                }
+            });
+        }
+
+    });
+};
+
+/**
+ * Fetch station transaction history by ID, Day, Month and Year
+ * Request - GET
+ * Params {jsonBodyItems}
+ */
+exports.fetch_transactions_history_by_station_id_day_month_year = function (req, res) {
+    // create an array of errors to return
+    var errors = []
+    if (!req.params.id) {
+        errors.push("No station ID specified");
+    }
+    if (!req.params.selectedDay) {
+        errors.push("No day specified");
+    }
+    if (!req.params.selectedMonth) {
+        errors.push("No month specified");
+    }
+    if (!req.params.selectedYear) {
+        errors.push("No year specified");
+    }
+
+    if (errors.length) {
+        res.status(400).json({ "error": errors.join(",") });
+        return;
+    }
+
+    var data = {
+        stationId: req.params.id,
+        selectedDay: req.params.selectedDay,
+        selectedMonth: req.params.selectedMonth,
+        selectedYear: req.params.selectedYear
+    }
+
+    var params = [data.stationId]
+    db.query(sqlStation.stationById, params, function (err, result) {
+        if (err) {
+            res.status(400).json({ "error": err.message })
+            return;
+        }
+
+        if (result.length == 0) {
+            res.json({
+                "code": errorCode,
+                "message": "Unable to find station"
+            })
+            return;
+        } else {
+            //lets pull the transactions for this station          
+
+            var params = [data.stationId, data.selectedDay, data.selectedMonth, data.selectedYear]
+            db.query(sql.fetchStationTransactionsByDayMonthYear, params, function (err, responseData) {
                 if (err) {
                     res.status(400).json({ "error": err.message })
                     return;
@@ -1087,7 +1538,5 @@ exports.submit_feedback = function (req, res) {
             });
         }
     });
-
-
 
 };

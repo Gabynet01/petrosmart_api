@@ -149,7 +149,7 @@ let helperFunctions = {
 
     },
 
-    PUSHNOTIFICATIONAPI(subscriberNotificationIds, messageTitle, messageBody, userNotificationType) {
+    PUSHNOTIFICATIONAPI(subscriberNotificationIds, messageTitle, messageBody, userNotificationType, paymentCode) {
         //note that subscriberNotificationIds is an ARRAY
         let endpoint = "https://onesignal.com/api/v1/notifications"
 
@@ -166,7 +166,7 @@ let helperFunctions = {
                 include_player_ids: subscriberNotificationIds,
                 headings: { en: messageTitle },
                 contents: { en: messageBody },
-                data: { "custom_data": userNotificationType }
+                data: { "custom_data": userNotificationType, "payment_code": paymentCode}
             })
         };
 

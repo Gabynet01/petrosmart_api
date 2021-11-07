@@ -621,7 +621,7 @@ exports.auto_transact = function (req, res) {
                         if (paymentCodeData.length == 0) {
 
                             //send push notification here
-                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Payment Code does not exist or has already been used", userNotificationType);
+                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Payment Code does not exist or has already been used", userNotificationType, data.paymentCode);
 
                             res.json({
                                 "code": errorCode,
@@ -643,7 +643,7 @@ exports.auto_transact = function (req, res) {
 
                                 if (companyWalletData.length == 0) {
                                     //send push notification here
-                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Company wallet details for this driver not found", userNotificationType);
+                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Company wallet details for this driver not found", userNotificationType, data.paymentCode);
                                     res.json({
                                         "code": errorCode,
                                         "message": "Company wallet details for this driver not found"
@@ -662,7 +662,7 @@ exports.auto_transact = function (req, res) {
 
                                         if (stationWalletData.length == 0) {
                                             //send push notification here
-                                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Filling station wallet details not found", userNotificationType);
+                                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "Filling station wallet details not found", userNotificationType, data.paymentCode);
                                             res.json({
                                                 "code": errorCode,
                                                 "message": "Filling station wallet details not found"
@@ -716,7 +716,7 @@ exports.auto_transact = function (req, res) {
 
                                                         if (getFleetManagerData.length == 0) {
                                                             //send push notification here
-                                                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "No fleet manager has being assigned to you, kindly contact admin", userNotificationType);
+                                                            helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Payment Issue", "No fleet manager has being assigned to you, kindly contact admin", userNotificationType, data.paymentCode);
                                                             res.json({
                                                                 "code": errorCode,
                                                                 "message": "No fleet manager was found for this driver, contact admin",
@@ -752,7 +752,7 @@ exports.auto_transact = function (req, res) {
                                                             //if the for loop is done send the message back
                                                             if (operationCounter === getFleetManagerData.length) {
                                                                 //send push notification here
-                                                                helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Purchase Awaiting Approval", "Your payment request of GHC" + purchaseAmount + " is awaiting approval by your fleet manager. You will be notified once the payment is successful.", userNotificationType);
+                                                                helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Purchase Awaiting Approval", "Your payment request of GHC" + purchaseAmount + " is awaiting approval by your fleet manager. You will be notified once the payment is successful.", userNotificationType, data.paymentCode);
 
                                                                 console.log("Push notification for fleet managers since all vouchers are used or none was found", allFleetManagersIds)
 
@@ -777,7 +777,7 @@ exports.auto_transact = function (req, res) {
                                                                             var fleetManagerSubscriberNotificationIds = [fleetManagerData[0].push_notification_id];
                                                                             var fleetManagerUserNotificationType = "FLEETMANAGER";
                                                                             //send the push notification here
-                                                                            helperFunctions.PUSHNOTIFICATIONAPI(fleetManagerSubscriberNotificationIds, "Payment Approval Request", "A payment request of GHC" + purchaseAmount + " is awaiting your approval on your pending lists.", fleetManagerUserNotificationType);
+                                                                            helperFunctions.PUSHNOTIFICATIONAPI(fleetManagerSubscriberNotificationIds, "Payment Approval Request", "A payment request of GHC" + purchaseAmount + " is awaiting your approval on your pending lists.", fleetManagerUserNotificationType,data.paymentCode);
                                                                         }
                                                                     });
                                                                 }
@@ -829,7 +829,7 @@ exports.auto_transact = function (req, res) {
                                                                 if (error) {
                                                                     console.log("Error occured while calling the MOMO API-->", error);
                                                                     //send push notification here
-                                                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Voucher Payment Failed", "Your payment of GHC" + purchaseAmount + " from your voucher could not be processed at this time.", userNotificationType);
+                                                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Voucher Payment Failed", "Your payment of GHC" + purchaseAmount + " from your voucher could not be processed at this time.", userNotificationType, data.paymentCode);
                                                                     res.json({
                                                                         "code": errorCode,
                                                                         "message": "OOPS! An error occured when try to reach the Payment Gateway. Please try again",
@@ -847,14 +847,14 @@ exports.auto_transact = function (req, res) {
 
                                                                 if (apiCallResponse.status == false) {
                                                                     //send push notification here
-                                                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Voucher Payment Failed", "Your payment of GHC" + purchaseAmount + " from your voucher could not be processed at this time.", userNotificationType);
+                                                                    helperFunctions.PUSHNOTIFICATIONAPI(subscriberNotificationIds, "Voucher Payment Failed", "Your payment of GHC" + purchaseAmount + " from your voucher could not be processed at this time.", userNotificationType, data.paymentCode);
                                                                     res.json({
                                                                         "code": errorCode,
                                                                         "message": apiCallResponse.statusMsg
                                                                     });
                                                                     return;
                                                                 }
-
+                                                                
                                                                 else if (apiCallResponse.status == true) {
 
                                                                     //since the MTN MOMO was successful, update the status of the voucher code to used
